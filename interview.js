@@ -65,9 +65,14 @@ const deepGet = (obj, props) => {
     let prop = propsArr[i];
     const arrIndex = getArrIndex(prop);
     if (arrIndex) {
-      prop = prop.slice(0, prop.length - 3);
-      currentObj = currentObj[prop];
-      currentObj && (currentObj = currentObj[arrIndex]);
+      let prevProp = prop;
+      if (Object.keys(currentObj).includes(prevProp)) { // 防止出现[number]结束的key
+        currentObj = currentObj[prevProp];
+      } else {
+        prop = prop.slice(0, prop.length - 3);
+        currentObj = currentObj[prop];
+        currentObj && Array.isArray(currentObj) && (currentObj = currentObj[arrIndex]);
+      }
     } else {
       currentObj = currentObj[prop];
     }
@@ -78,6 +83,29 @@ const deepGet = (obj, props) => {
 
   return currentObj;
 }
+
+/** 以下为测试代码 */
+console.log(
+
+  deepGet({
+    school: {
+      student: { name: 'Tomy' },
+    },
+  }, 'school.student.name'),// => 'Tomy',
+
+  deepGet({
+    school: {
+      'students[2]': [
+        { name: 'Tomy' },
+        { name: 'Lucy' },
+      ],
+    }
+  }, 'school.students[2]'),// => 'Lucy',
+
+  // 对于不存在的属性，返回 undefined
+  deepGet({ user: { name: 'Tomy' } }, 'user.age'), // => undefined
+  deepGet({ user: { name: 'Tomy' } }, 'school.user.age') // => undefined
+)
 
 // Q4
 const isValidArgs = (args) => {
